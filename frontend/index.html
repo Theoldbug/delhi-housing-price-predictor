@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delhi Home Prices</title>
+<meta name="description" content="Ask in plain language what a home in Delhi should cost and get an estimate with the reasoning behind it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f4f1;
+    --surface: #ffffff;
+    --ink: #1b211d;
+    --ink-soft: #566059;
+    --line: #d5d9d3;
+    --green: #1f3d2b;
+    --green-soft: #e4ece6;
+    --error: #8a2f22;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 56px 16px 80px;
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+    max-width: 14ch;
+  }
+
+  .lede {
+    color: var(--ink-soft);
+    margin: 0 0 32px;
+    max-width: 48ch;
+  }
+
+  form { margin: 0; }
+
+  .ask {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    transition: border-color .15s;
+  }
+  .ask:focus-within { border-color: var(--green); }
+
+  textarea {
+    width: 100%;
+    border: 0;
+    resize: none;
+    font: inherit;
+    font-size: 1.125rem;
+    line-height: 1.45;
+    color: var(--ink);
+    background: transparent;
+    padding: 4px 4px 0;
+    min-height: 68px;
+  }
+  textarea:focus { outline: none; }
+  textarea::placeholder { color: #8d968f; }
+
+  .ask-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hint { color: var(--ink-soft); font-size: .875rem; }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    background: var(--green);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+  }
+  button:hover { background: #163021; }
+  button:disabled { background: #7f8f85; cursor: default; }
+  button:focus-visible, .chip:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+  }
+
+  .examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .chip {
+    font: inherit;
+    font-size: .875rem;
+    font-weight: 500;
+    background: transparent;
+    color: var(--green);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  .chip:hover { background: var(--green-soft); }
+
+  #result { margin-top: 48px; }
+  #result[hidden] { display: none; }
+
+  .status { color: var(--ink-soft); }
+  .status.error { color: var(--error); }
+
+  .price-label { color: var(--ink-soft); margin: 0 0 4px; }
+
+  .price {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(3rem, 12vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--green);
+    margin: 0;
+  }
+  .price-exact { color: var(--ink-soft); margin: 8px 0 0; }
+
+  .explanation {
+    margin: 28px 0 0;
+    font-size: 1.0625rem;
+    max-width: 60ch;
+  }
+
+  .features {
+    margin: 32px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  .features h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 20px;
+    margin: 0;
+  }
+  dt { color: var(--ink-soft); }
+  dd { margin: 0; }
+
+  footer {
+    margin-top: 64px;
+    color: var(--ink-soft);
+    font-size: .875rem;
+  }
+  footer a { color: var(--green); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #result { animation: reveal .35s ease-out; }
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>What should a home in Delhi cost?</h1>
+  <p class="lede">Ask the way you'd ask your property dealer. The estimate comes from a model trained on real Delhi listings, with the estimate come to you.</p>
+
+  <form id="ask-form">
+    <div class="ask">
+      <textarea id="query" name="query" rows="2" aria-label="Your question" placeholder="What would a 3BHK in Dwarka cost, semi furnished?" required></textarea>
+      <div class="ask-row">
+        <span class="hint">Mention the area, BHK, size or furnishing if you know them.</span>
+        <button type="submit" id="submit">Get estimate</button>
+      </div>
+    </div>
+  </form>
+
+  <ul class="examples" aria-label="Example questions">
+    <li><button type="button" class="chip">3BHK in Dwarka, semi furnished</button></li>
+    <li><button type="button" class="chip">2 bedroom flat in Rohini around 900 sqft</button></li>
+    <li><button type="button" class="chip">Fully furnished 4BHK apartment in Saket</button></li>
+  </ul>
+
+  <section id="result" hidden aria-live="polite"></section>
+
+</main>
+
+<script>
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : 'https://YOUR-RENDER-SERVICE.onrender.com';
+
+  const form = document.getElementById('ask-form');
+  const queryEl = document.getElementById('query');
+  const submitBtn = document.getElementById('submit');
+  const resultEl = document.getElementById('result');
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      queryEl.value = chip.textContent;
+      form.requestSubmit();
+    });
+  });
+
+  queryEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const query = queryEl.value.trim();
+    if (!query) return;
+
+    submitBtn.disabled = true;
+    showStatus('Working out an estimate.');
+    const slowTimer = setTimeout(
+      () => showStatus('Still working. The server sleeps when idle and takes a moment to wake up.'),
+      4000
+    );
+
+    try {
+      const res = await fetch(`${API_BASE}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      if (!res.ok) {
+        const detail = await res.json().catch(() => ({}));
+        throw new Error(detail.detail || `The server replied with status ${res.status}.`);
+      }
+      renderResult(await res.json());
+    } catch (err) {
+      showStatus(
+        err.message.includes('fetch')
+          ? 'Could not reach the server. Check that the backend is running and try again.'
+          : err.message,
+        true
+      );
+    } finally {
+      clearTimeout(slowTimer);
+      submitBtn.disabled = false;
+    }
+  });
+
+  function showStatus(message, isError = false) {
+    resultEl.hidden = false;
+    resultEl.innerHTML = `<p class="status${isError ? ' error' : ''}"></p>`;
+    resultEl.querySelector('p').textContent = message;
+  }
+
+  function renderResult({ predicted_price, features, explanation }) {
+    resultEl.hidden = false;
+    resultEl.innerHTML = `
+      <p class="price-label">Estimated price</p>
+      <p class="price">${formatIndian(predicted_price)}</p>
+      <p class="price-exact">${formatRupees(predicted_price)}</p>
+      <p class="explanation"></p>
+      <div class="features">
+        <h2>What the estimate is based on</h2>
+        <dl></dl>
+      </div>`;
+    resultEl.querySelector('.explanation').textContent = explanation;
+
+    const dl = resultEl.querySelector('dl');
+    Object.entries(features || {}).forEach(([key, value]) => {
+      const dt = document.createElement('dt');
+      const dd = document.createElement('dd');
+      dt.textContent = key.replace(/_/g, ' ');
+      dd.textContent = value ?? 'Not given, used a typical value';
+      dl.append(dt, dd);
+    });
+  }
+
+  function formatIndian(n) {
+    if (n >= 1e7) return `₹${(n / 1e7).toFixed(2)} Cr`;
+    if (n >= 1e5) return `₹${(n / 1e5).toFixed(1)} L`;
+    return formatRupees(n);
+  }
+
+  function formatRupees(n) {
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+  }
+</script>
+</body>
+</html>
